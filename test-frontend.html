@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Frontend Sistema Officina</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Login</h2>
+        <button onclick="testLogin()">Login come Ray Cooper</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Restock</h2>
+        <button onclick="testRestock()">Test Restock</button>
+        <div id="restock-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Activity Feed</h2>
+        <button onclick="testActivities()">Carica Attività</button>
+        <div id="activities-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Test Gestione Dipendenti (Admin)</h2>
+        <button onclick="testEmployees()">Carica Dipendenti</button>
+        <div id="employees-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. Verifica LocalStorage</h2>
+        <button onclick="checkLocalStorage()">Controlla LocalStorage</button>
+        <div id="localstorage-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = 'Caricamento...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'raycooper' })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Simulo quello che fa il frontend
+                    localStorage.setItem('currentUser', JSON.stringify(data.employee));
+                    
+                    resultDiv.className = 'test-section success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Login Riuscito</h3>
+                        <pre>${JSON.stringify(data.employee, null, 2)}</pre>
+                        <p><strong>Ruolo:</strong> ${data.employee.role}</p>
+                        <p><strong>È Admin:</strong> ${data.employee.role === 'admin' ? 'SÌ' : 'NO'}</p>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.className = 'test-section error';
+                    resultDiv.innerHTML = `<h3>❌ Errore Login</h3><pre>${error}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-section error';
+                resultDiv.innerHTML = `<h3>❌ Errore</h3><pre>${error.message}</pre>`;
+            }
+        }
+        
+        async function testRestock() {
+            const resultDiv = document.getElementById('restock-result');
+            resultDiv.innerHTML = 'Caricamento...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/inventory/restock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'raycooper',
+                        itemId: 1,
+                        quantity: 3,
+                        description: 'Test restock frontend'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'test-section success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Restock Completato</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.className = 'test-section error';
+                    resultDiv.innerHTML = `<h3>❌ Errore Restock</h3><pre>${error}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-section error';
+                resultDiv.innerHTML = `<h3>❌ Errore</h3><pre>${error.message}</pre>`;
+            }
+        }
+        
+        async function testActivities() {
+            const resultDiv = document.getElementById('activities-result');
+            resultDiv.innerHTML = 'Caricamento...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/activities`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'test-section success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Attività Caricate (${data.length})</h3>
+                        <pre>${JSON.stringify(data.slice(0, 3), null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.className = 'test-section error';
+                    resultDiv.innerHTML = `<h3>❌ Errore Attività</h3><pre>${error}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-section error';
+                resultDiv.innerHTML = `<h3>❌ Errore</h3><pre>${error.message}</pre>`;
+            }
+        }
+        
+        async function testEmployees() {
+            const resultDiv = document.getElementById('employees-result');
+            resultDiv.innerHTML = 'Caricamento...';
+            
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                const userRole = currentUser.role || 'employee';
+                
+                const response = await fetch(`${API_BASE}/employees?userRole=${userRole}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'test-section success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Dipendenti Caricati (${data.length})</h3>
+                        <p><strong>Ruolo Utente:</strong> ${userRole}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.className = 'test-section error';
+                    resultDiv.innerHTML = `<h3>❌ Errore Dipendenti</h3><pre>${error}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-section error';
+                resultDiv.innerHTML = `<h3>❌ Errore</h3><pre>${error.message}</pre>`;
+            }
+        }
+        
+        function checkLocalStorage() {
+            const resultDiv = document.getElementById('localstorage-result');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            resultDiv.className = 'test-section';
+            resultDiv.innerHTML = `
+                <h3>📱 LocalStorage</h3>
+                <pre>${JSON.stringify(currentUser, null, 2)}</pre>
+                <p><strong>È Admin:</strong> ${currentUser.role === 'admin' ? 'SÌ' : 'NO'}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
+
+
+
+
